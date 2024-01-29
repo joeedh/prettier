@@ -1,20 +1,20 @@
 import isNonEmptyArray from "../utils/is-non-empty-array.js";
 import {
+  createTypeCheckFunction,
   getFunctionParameters,
   getLeftSidePathName,
+  getPrecedence,
   hasNakedLeftSide,
   hasNode,
+  isArrayOrTupleExpression,
+  isBinaryCastExpression,
   isBitwiseOperator,
-  startsWithNoLookaheadToken,
-  shouldFlatten,
-  getPrecedence,
   isCallExpression,
   isMemberExpression,
-  isObjectProperty,
-  isBinaryCastExpression,
-  isArrayOrTupleExpression,
   isObjectOrRecordExpression,
-  createTypeCheckFunction,
+  isObjectProperty,
+  shouldFlatten,
+  startsWithNoLookaheadToken,
 } from "./utils/index.js";
 
 function needsParens(path, options) {
@@ -95,10 +95,10 @@ function needsParens(path, options) {
       const expression = !statement
         ? undefined
         : statement.type === "ExpressionStatement"
-        ? statement.expression
-        : statement.type === "ForStatement"
-        ? statement.init
-        : statement.left;
+          ? statement.expression
+          : statement.type === "ForStatement"
+            ? statement.init
+            : statement.left;
       if (
         expression &&
         startsWithNoLookaheadToken(

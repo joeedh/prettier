@@ -1,11 +1,13 @@
+import fs from "node:fs";
 import path from "node:path";
 import url from "node:url";
-import fs from "node:fs";
+
 import createEsmUtils from "esm-utils";
-import { PROJECT_ROOT, DIST_DIR, copyFile } from "../utils/index.js";
+
+import { copyFile, DIST_DIR, PROJECT_ROOT } from "../utils/index.js";
 import buildJavascriptModule from "./build-javascript-module.js";
-import buildPackageJson from "./build-package-json.js";
 import buildLicense from "./build-license.js";
+import buildPackageJson from "./build-package-json.js";
 import buildTypes from "./build-types.js";
 import modifyTypescriptModule from "./modify-typescript-module.js";
 import { getPackageFile } from "./utils.js";
@@ -210,6 +212,12 @@ const pluginFiles = [
       },
       {
         module: getPackageFile(
+          "@typescript-eslint/typescript-estree/dist/jsx/xhtml-entities.js",
+        ),
+        text: "exports.xhtmlEntities = {};",
+      },
+      {
+        module: getPackageFile(
           "@typescript-eslint/typescript-estree/dist/create-program/createProjectService.js",
         ),
         text: "",
@@ -249,6 +257,26 @@ const pluginFiles = [
       {
         module: getPackageFile("debug/src/browser.js"),
         path: path.join(dirname, "./shims/debug.js"),
+      },
+      {
+        module: require.resolve("ts-api-utils"),
+        process() {
+          throw new Error(
+            "Please replace the CJS version of 'ts-api-utils' with ESM version.",
+          );
+        },
+      },
+      {
+        module: getPackageFile(
+          "@typescript-eslint/typescript-estree/dist/convert-comments.js",
+        ),
+        process(text) {
+          text = text.replace(
+            'const tsutils = __importStar(require("ts-api-utils"));',
+            'import * as tsutils from "ts-api-utils";',
+          );
+          return text;
+        },
       },
     ],
   },
@@ -581,7 +609,20 @@ const nodejsFiles = [
       },
       {
         module: getPackageFile("js-yaml/dist/js-yaml.mjs"),
-        path: getPackageFile("js-yaml/lib/loader.js"),
+        find: "var dump                = dumper.dump;",
+        replacement: "var dump;",
+      },
+      // `parse-json` use another copy of `@babel/code-frame`
+      {
+        module: require.resolve("@babel/code-frame", {
+          paths: [require.resolve("parse-json")],
+        }),
+        path: require.resolve("@babel/code-frame"),
+      },
+      {
+        module: getPackageFile("json5/dist/index.mjs"),
+        find: "export default lib;",
+        replacement: "export default { parse };",
       },
     ],
     addDefaultExport: true,
@@ -606,17 +647,6 @@ const nodejsFiles = [
     outputBaseName: "internal/cli",
     external: ["benchmark"],
     replaceModule: [replaceDiffPackageEntry("lib/patch/create.js")],
-  },
-  {
-    input: "src/common/mockable.js",
-    outputBaseName: "internal/internal",
-    replaceModule: [
-      {
-        module: require.resolve("lilconfig"),
-        find: "exports.lilconfigSync = lilconfigSync;",
-        replacement: "",
-      },
-    ],
   },
 ].flatMap((file) => {
   let { input, output, outputBaseName, ...buildOptions } = file;
