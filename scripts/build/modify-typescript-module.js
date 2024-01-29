@@ -81,7 +81,9 @@ class TypeScriptModuleSource {
       module = this.modules.find((searching) => searching.path === module);
     }
 
-    return this.replaceModule(module, "");
+    if (module) {
+      return this.replaceModule(module, "");
+    }
   }
 
   replaceAlignedCode({ start, end, replacement = "" }) {

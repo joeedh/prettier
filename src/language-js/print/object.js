@@ -19,10 +19,7 @@ import {
   isObjectType,
   shouldPrintComma,
 } from "../utils/index.js";
-import { locStart, locEnd } from "../loc.js";
 import { printDocToString } from "../../document/printer.js";
-import { printOptionalToken } from "./misc.js";
-import { shouldHugTheOnlyFunctionParameter } from "./function-parameters.js";
 import { printHardlineAfterHeritage } from "./class.js";
 import { shouldHugTheOnlyFunctionParameter } from "./function-parameters.js";
 import { printOptionalToken } from "./misc.js";
